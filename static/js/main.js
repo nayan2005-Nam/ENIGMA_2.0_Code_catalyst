@@ -22,10 +22,17 @@ const scenarioCard = document.getElementById('scenarioCard');
 const paintRedBtn = document.getElementById('paintRedBtn');
 const paintBlueBtn = document.getElementById('paintBlueBtn');
 
+// new controls for import and regenerate
+const importBtn = document.getElementById('importBtn');
+const generateBtn = document.getElementById('generateBtn');
+const fileInput = document.getElementById('fileInput');
+
 // New Phase 2 DOM Elements
 const chatForm = document.getElementById('chatForm');
 const chatInput = document.getElementById('chatInput');
 const chatHistory = document.getElementById('chatHistory');
+// update placeholder text to emphasise technical questions
+chatInput.placeholder = "Try: learning rate, neural networks, training steps, graph explanation";
 const notesContent = document.getElementById('notesContent');
 const quizQuestion = document.getElementById('quizQuestion');
 const quizOptions = document.getElementById('quizOptions');
@@ -39,6 +46,11 @@ const curriculum = {
             <p class="mb-2">A Neural Network mathematically simulates the human brain using connected "neurons".</p>
             <p class="mb-2">It excels at finding <b>non-linear boundaries</b>. Because it uses hidden layers and activation functions, it can bend its decision boundary around complex shapes like circles and moons.</p>
         `,
+        moreNotes: `
+            <p class="mb-2">Internally it consists of layers of weighted sums and activation functions; training adjusts weights using gradient descent and backpropagation.</p>
+            <p class="mb-2">Modern nets often use dropout, batch normalization, and various optimizers, but the core idea is still the same.</p>
+        `,
+        docUrl: 'https://en.wikipedia.org/wiki/Artificial_neural_network',
         quiz: {
             q: "Does a Neural Network use partial derivatives to update its weights?",
             options: [
@@ -53,6 +65,11 @@ const curriculum = {
             <p class="mb-2">A Linear Classifier tries to find a single straight line (or hyperplane) to divide the classes.</p>
             <p class="mb-2">It's fast and interpretable, but fails entirely on datasets like "Circles" where a straight line cannot separate the inside and outside.</p>
         `,
+        moreNotes: `
+            <p class="mb-2">SGD stands for Stochastic Gradient Descent: the model updates weights incrementally using one datapoint at a time, which allows it to scale to large datasets.</p>
+            <p class="mb-2">With appropriate regularization you can control overfitting; logistic regression is a common example of a linear classifier.</p>
+        `,
+        docUrl: 'https://en.wikipedia.org/wiki/Linear_classifier#Logistic_regression',
         quiz: {
             q: "Can a Linear Classifier perfectly solve the 'Moons' dataset?",
             options: [
@@ -67,6 +84,11 @@ const curriculum = {
             <p class="mb-2">KNN doesn't actually "train" iteratively. It just memorizes the data.</p>
             <p class="mb-2">To make a prediction, it looks at the <b>K nearest points</b> to that spot and takes a majority vote. It can draw very jagged, complex borders.</p>
         `,
+        moreNotes: `
+            <p class="mb-2">The value of K controls smoothness; small K leads to overfitting, large K behaves more like a global average.</p>
+            <p class="mb-2">Distance metrics (Euclidean, Manhattan, etc.) determine neighborhood shape; standardization of features is important.</p>
+        `,
+        docUrl: 'https://en.wikipedia.org/wiki/K-nearest_neighbors_algorithm',
         quiz: {
             q: "If K=1, what does the decision boundary look like?",
             options: [
@@ -141,11 +163,28 @@ function setupEventListeners() {
     paintRedBtn.addEventListener('click', () => setPaintClass(0));
     paintBlueBtn.addEventListener('click', () => setPaintClass(1));
 
+    // Additional dataset controls
+    importBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', handleFileUpload);
+    generateBtn.addEventListener('click', () => {
+        // re-fetch current dataset to regenerate random sample
+        fetchDataset(currentDataset);
+    });
+
     // Plotly canvas click event for adding points
     document.getElementById('mainPlot').addEventListener('click', handlePlotClick);
 
     // Chatbot Submit
     chatForm.addEventListener('submit', handleChatSubmit);
+
+    // Explain Graph Button
+    const explainGraphBtn = document.getElementById('explainGraphBtn');
+    if (explainGraphBtn) {
+        explainGraphBtn.addEventListener('click', () => {
+            chatInput.value = "Please explain the current graph and decision boundary.";
+            chatForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+        });
+    }
 
     // Init Curriculum
     updateCurriculum();
@@ -158,11 +197,32 @@ function updateCurriculum() {
 
     if (!content) return;
 
-    // Update Notes
+    // Update Notes with toggle and documentation link
     notesContent.innerHTML = `
-        <h3 class="font-bold text-white mb-2">${content.title}</h3>
+        <div class="flex items-center justify-between">
+            <h3 class="font-bold text-white mb-2">${content.title}</h3>
+            ${content.docUrl ? `<a href="${content.docUrl}" target="_blank" title="Open documentation" class="text-indigo-300 hover:text-indigo-100 text-sm">📖</a>` : ''}
+        </div>
         ${content.notes}
+        <div id="moreNotes" class="hidden">
+            ${content.moreNotes || ''}
+        </div>
+        ${content.moreNotes ? '<button id="toggleNotesBtn" class="text-xs text-indigo-400 mt-1">Show more</button>' : ''}
     `;
+    // attach toggle handler if applicable
+    if (content.moreNotes) {
+        const btn = document.getElementById('toggleNotesBtn');
+        const more = document.getElementById('moreNotes');
+        btn.addEventListener('click', () => {
+            if (more.classList.contains('hidden')) {
+                more.classList.remove('hidden');
+                btn.textContent = 'Show less';
+            } else {
+                more.classList.add('hidden');
+                btn.textContent = 'Show more';
+            }
+        });
+    }
 
     // Update Quiz
     quizQuestion.textContent = content.quiz.q;
@@ -214,6 +274,7 @@ async function handleChatSubmit(e) {
 
     // 3. Fetch from Python /api/chat
     const algo = document.getElementById('algorithmSelect').options[document.getElementById('algorithmSelect').selectedIndex].text;
+    // provide algorithm context for chat prompt
 
     try {
         const res = await fetch('/api/chat', {
@@ -299,6 +360,37 @@ async function addDataPoint(x, y, cls) {
         }
     } catch (err) {
         console.error("Failed to add point", err);
+    }
+}
+
+// handle CSV file uploads from user device
+async function handleFileUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const form = new FormData();
+    form.append('file', file);
+
+    try {
+        const res = await fetch('/api/upload', {
+            method: 'POST',
+            body: form
+        });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+
+        // reset state and render
+        currentLosses = [];
+        currentEpochSum = 0;
+        updateLossPlot();
+        lossDisplay.textContent = "1.000";
+        renderScatter(data.X, data.y);
+    } catch (err) {
+        console.error('Upload failed', err);
+        alert('Failed to import dataset: ' + err.message);
+    } finally {
+        // clear file input so same file can be re-selected later
+        fileInput.value = '';
     }
 }
 
@@ -473,6 +565,11 @@ async function performTrainingStep() {
         lossDisplay.textContent = data.loss.toFixed(4);
         currentLosses.push(data.loss);
         updateLossPlot();
+
+        // Update Accuracy display
+        if (data.accuracy !== undefined) {
+            document.getElementById('accDisplay').textContent = (data.accuracy * 100).toFixed(2) + '%';
+        }
 
         // Update Decision Boundary (Contour)
         renderDecisionBoundary(data.grid_x, data.grid_y, data.grid_z);

@@ -5,9 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive ML Simulator</title>
-    <!-- Tailwind CSS -->
+    
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Plotly.js -->
+    
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script>
@@ -24,8 +24,8 @@
     </script>
 </head>
 
-<body class="bg-dark text-slate-200 min-h-screen font-sans overflow-hidden flex flex-col">
-    <!-- Navbar -->
+<body class="bg-dark text-slate-200 min-h-screen font-sans overflow-auto flex flex-col">
+    
     <header
         class="border-b border-slate-700 bg-slate-900/50 backdrop-blur-md p-4 flex justify-between items-center z-10 w-full relative">
         <div class="flex items-center space-x-6">
@@ -51,16 +51,16 @@
         </div>
     </header>
 
-    <!-- Background Decoration -->
+    
     <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-20">
         <div class="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-indigo-500 blur-[120px]"></div>
         <div class="absolute bottom-[0%] right-[0%] w-[40%] h-[40%] rounded-full bg-emerald-500 blur-[100px]"></div>
     </div>
 
-    <!-- Main Workspace (3 columns: Chatbot, Sandbox, Curriculum) -->
+    
     <div class="flex-1 flex overflow-hidden z-10 w-full relative">
 
-        <!-- LEFT COLUMN: AI Tutor (Gemini Chatbot) -->
+        
         <aside
             class="w-1/4 min-w-[300px] border-r border-slate-700 flex flex-col glass-panel bg-slate-900/60 shadow-xl overflow-hidden">
             <div class="bg-indigo-900/40 border-b border-indigo-500/20 p-4 shrink-0">
@@ -77,14 +77,13 @@
             <div id="chatHistory" class="flex-1 p-4 overflow-y-auto flex flex-col gap-3 scroll-smooth">
                 <div
                     class="bg-slate-800/80 rounded-lg rounded-tl-none p-3 text-sm text-slate-300 border border-slate-700 self-start w-5/6">
-                    Hello! I'm your AI tutor. Adjust the sliders in the Sandbox, and feel free to ask me if you don't
-                    understand how a Learning Rate works or what a Neural Network is doing!
+                    Hello! I'm your AI tutor. Ask me technical questions about machine learning while you train — try: learning rate, neural networks, training steps, or ask for a graph explanation.
                 </div>
             </div>
 
             <div class="p-3 bg-slate-800/50 border-t border-slate-700 shrink-0">
                 <form id="chatForm" class="flex gap-2">
-                    <input type="text" id="chatInput" placeholder="Ask Gemini..."
+                    <input type="text" id="chatInput" placeholder="Try: learning rate, neural networks, training steps, graph explanation"
                         class="flex-1 bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 text-slate-200"
                         autocomplete="off" required>
                     <button type="submit"
@@ -98,10 +97,10 @@
             </div>
         </aside>
 
-        <!-- CENTER COLUMN: Interactive ML Sandbox -->
+       
         <main class="w-2/4 flex flex-col px-4 py-4 overflow-y-auto">
 
-            <!-- Sandbox Controls Header -->
+           
             <div
                 class="glass-panel p-4 rounded-xl border border-slate-700/50 flex flex-wrap gap-4 items-end mb-4 shadow-lg shrink-0">
                 <div class="space-y-1 w-full sm:w-1/4">
@@ -116,7 +115,10 @@
 
                 <div class="space-y-1 flex-1 min-w-[150px]">
                     <div class="flex justify-between text-[10px] uppercase font-bold text-slate-400">
-                        <span>Learning Rate</span>
+                        <span class="flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                            Learning Rate
+                        </span>
                         <span id="lrVal" class="text-indigo-400">0.01</span>
                     </div>
                     <input type="range" id="lrSlider" min="0.001" max="0.1" step="0.001" value="0.01" class="w-full">
@@ -130,15 +132,46 @@
                     <input type="range" id="epochSlider" min="1" max="1000" step="10" value="1" class="w-full">
                 </div>
 
-                <div class="flex gap-2 min-w-[120px] ml-auto">
+                <div class="flex gap-2 min-w-[150px] ml-auto">
                     <button id="trainBtn"
                         class="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 text-white rounded font-bold px-4 flex-1 text-sm shadow-lg shadow-emerald-500/20 active:scale-95 transition-all flex justify-center items-center gap-1 h-9">
                         ▶ Train
                     </button>
-                    <button id="resetBtn"
-                        class="bg-slate-700 hover:bg-slate-600 text-slate-300 rounded px-3 text-sm transition h-9 border border-slate-600">
-                        ↻
+                    <button id="resetBtn" title="Generate New Data"
+                        class="bg-indigo-600 hover:bg-indigo-500 text-white rounded px-3 text-sm transition h-9 border border-indigo-500 shadow-md flex justify-center items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg>
+                        <span class="hidden xl:inline">Generate Data</span>
                     </button>
+                </div>
+            </div>
+
+            <!-- Metrics Row (Performance & Accuracy) -->
+            <div class="flex gap-4 mb-4 shrink-0">
+                <div class="flex-1 bg-slate-800/60 p-3 rounded-xl border border-slate-700/50 flex items-center justify-between shadow-md">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-amber-500/20 rounded-lg text-amber-400">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        </div>
+                        <div>
+                            <div class="text-[10px] uppercase font-bold text-slate-400">Model Performance (Loss)</div>
+                            <div class="text-lg text-slate-200 font-mono" id="perfDisplay">Ready</div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Model Accuracy -->
+                <div class="flex-1 bg-slate-800/60 p-3 rounded-xl border border-slate-700/50 flex items-center justify-between shadow-md">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-emerald-500/20 rounded-lg text-emerald-400">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <div>
+                            <div class="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>
+                                Model Accuracy
+                            </div>
+                            <div class="text-lg text-slate-200 font-mono" id="accDisplay">0.00%</div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -148,10 +181,10 @@
                 <span id="scenarioDesc"></span>
             </div>
 
-            <!-- Visualization Area -->
+            
             <div class="flex-1 flex flex-col gap-4 min-h-[500px]">
 
-                <!-- Main Plotly Canvas -->
+              
                 <div class="flex-1 bg-card rounded-xl border border-slate-700/50 shadow-xl flex flex-col p-2 relative">
                     <div
                         class="flex items-center gap-2 p-2 border-b border-slate-800 absolute top-0 left-0 w-full z-10 bg-gradient-to-b from-[rgba(30,41,59,0.9)] to-transparent rounded-t-xl">
@@ -159,18 +192,33 @@
                         <span id="trainingIndicator"
                             class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse hidden"></span>
 
-                        <div class="ml-auto flex gap-1 bg-slate-900/50 p-1 rounded-md border border-slate-700/50">
-                            <!-- Data Shape Buttons -->
+<div class="ml-auto flex gap-1 bg-slate-900/50 p-1 rounded-md border border-slate-700/50 items-center">
+                            <!-- dataset selectors -->
                             <button class="dataset-btn px-2 py-0.5 text-[10px] rounded hover:bg-slate-700 transition"
                                 data-type="moons">🌙 Moons</button>
                             <button class="dataset-btn px-2 py-0.5 text-[10px] rounded hover:bg-slate-700 transition"
                                 data-type="circles">⭕ Circles</button>
                             <button class="dataset-btn px-2 py-0.5 text-[10px] rounded hover:bg-slate-700 transition"
                                 data-type="linear">/ Linear</button>
+
+                            <!-- new controls: regenerate and import -->
+                            <button id="generateBtn" class="tool-btn px-2 py-0.5 text-[10px] rounded hover:bg-slate-700 transition"
+                                title="Regenerate sample data">🎲</button>
+                            <button id="importBtn" class="tool-btn px-2 py-0.5 text-[10px] rounded hover:bg-slate-700 transition"
+                                title="Import CSV dataset">📁</button>
+                            <input type="file" id="fileInput" accept=".csv" class="hidden" />
                         </div>
                     </div>
 
                     <div id="mainPlot" class="flex-1 w-full bg-slate-900/30 rounded-lg mt-8 z-0 cursor-crosshair"></div>
+
+                    <!-- Explain Graph Overlay -->
+                    <div class="absolute bottom-4 left-4 z-10">
+                        <button id="explainGraphBtn" class="bg-indigo-600/90 hover:bg-indigo-500 text-white text-[10px] font-bold py-1.5 px-3 rounded flex items-center gap-1.5 border border-indigo-500/50 backdrop-blur-sm transition uppercase tracking-wider shadow-lg">
+                            <svg class="w-4 h-4 text-indigo-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path></svg>
+                            Graph Explanation
+                        </button>
+                    </div>
 
                     <!-- Paintbrush overlay UI -->
                     <div
@@ -185,7 +233,7 @@
                     </div>
                 </div>
 
-                <!-- Loss Plotly Canvas (compressed) -->
+                
                 <div
                     class="h-40 bg-card rounded-xl border border-slate-700/50 shadow-xl flex flex-col p-2 shrink-0 relative overflow-hidden">
                     <div class="absolute top-2 left-4 text-xs font-bold text-slate-400 uppercase z-10">Loss Curve <span
@@ -196,11 +244,11 @@
             </div>
         </main>
 
-        <!-- RIGHT COLUMN: Curriculum (Notes & Quiz) -->
+        
         <aside
             class="w-1/4 min-w-[300px] border-l border-slate-700 glass-panel bg-slate-900/60 flex flex-col shadow-xl overflow-hidden p-4 space-y-4 overflow-y-auto">
 
-            <!-- Dynamic Notes Section -->
+            
             <div class="flex-1 bg-slate-800/40 border border-teal-500/20 rounded-xl p-4 flex flex-col">
                 <h2
                     class="font-bold text-teal-400 flex items-center gap-2 mb-3 pb-2 border-b border-teal-500/20 uppercase text-sm tracking-wider">
@@ -212,7 +260,7 @@
                     Study Notes
                 </h2>
                 <div id="notesContent" class="text-sm text-slate-300 leading-relaxed overflow-y-auto">
-                    <!-- Dynamic Content -->
+                   
                     <h3 class="font-bold text-white mb-2">Multi-Layer Perceptron (NN)</h3>
                     <p class="mb-2">A Neural Network mathematically simulates the human brain using connected "neurons."
                     </p>
@@ -222,7 +270,7 @@
                 </div>
             </div>
 
-            <!-- Interactive Quiz Section -->
+            
             <div class="bg-slate-800/40 border border-purple-500/20 rounded-xl p-4 shrink-0">
                 <h2
                     class="font-bold text-purple-400 flex items-center gap-2 mb-3 pb-2 border-b border-purple-500/20 uppercase text-sm tracking-wider">
@@ -234,7 +282,7 @@
                     Pop Quiz
                 </h2>
                 <div id="quizContainer">
-                    <!-- Dynamic Content -->
+                    
                     <p id="quizQuestion" class="text-sm font-semibold text-slate-200 mb-3">Does a Neural Network use
                         partial derivatives (Gradient Descent) to update its weights?</p>
                     <div id="quizOptions" class="space-y-2">
@@ -253,7 +301,7 @@
 
     </div>
 
-    <!-- Script references -->
+    
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 

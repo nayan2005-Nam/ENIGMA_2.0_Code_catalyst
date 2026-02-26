@@ -13,6 +13,14 @@
     border-radius: 10px;
 }
 
+/* Ensure page can scroll and supports touchpad/touch smooth scrolling */
+html, body {
+    height: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+}
+
 /* Base resets */
 body {
     -webkit-font-smoothing: antialiased;
@@ -78,3 +86,39 @@ input[type=range]::-webkit-slider-thumb {
 input[type=range]::-webkit-slider-thumb:hover {
     transform: scale(1.2);
 }
+
+/* small icon buttons used for import/generate */
+.tool-btn {
+    background-color: transparent;
+    color: #94a3b8;
+    border: 1px solid transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+.tool-btn:hover {
+    background-color: rgba(71, 85, 105, 0.3);
+    border-color: rgba(71, 85, 105, 0.5);
+}
+.tool-btn:active {
+    background-color: rgba(71, 85, 105, 0.5);
+}
+
+/* chat history scrollbar enhancements */
+#chatHistory {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(71, 85, 105, 0.8) rgba(15, 23, 42, 0.5);
+    max-height: 100%;
+}
+#chatHistory::-webkit-scrollbar {
+    width: 8px;
+}
+#chatHistory::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.5);
+}
+#chatHistory::-webkit-scrollbar-thumb {
+    background-color: rgba(71, 85, 105, 0.8);
+    border-radius: 10px;
+}
+
