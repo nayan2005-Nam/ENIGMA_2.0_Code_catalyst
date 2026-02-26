@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive ML Simulator</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: '#0f172a',
+                        card: 'rgba(30, 41, 59, 0.7)',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="bg-dark text-slate-200 min-h-screen font-sans overflow-hidden flex flex-col">
+    <!-- Navbar -->
+    <header
+        class="border-b border-slate-700 bg-slate-900/50 backdrop-blur-md p-4 flex justify-between items-center z-10 w-full relative">
+        <div class="flex items-center space-x-6">
+            <div class="flex items-center space-x-3">
+                <div
+                    class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold">
+                    ML</div>
+                <h1 class="text-xl font-semibold tracking-tight">Interactive ML Sandbox</h1>
+            </div>
+            <nav class="hidden md:flex space-x-6 border-l border-slate-700 pl-6">
+                <a href="#" class="text-indigo-400 font-semibold text-sm hover:text-indigo-300 transition">⭐ Home</a>
+                <a href="#" class="text-slate-400 font-semibold text-sm hover:text-slate-200 transition">👤 Profile</a>
+            </nav>
+        </div>
+        <div class="flex items-center space-x-4">
+            <span class="text-xs text-slate-400 hidden sm:block">Logged in as: <span
+                    class="text-emerald-400 font-bold">{{ session.get('username', 'Guest') }}</span></span>
+            <a href="{{ url_for('logout') }}"
+                class="text-xs px-3 py-1.5 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded border border-red-500/50 transition">Logout</a>
+            <button id="scenarioBtn"
+                class="text-sm px-4 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-md transition-colors border border-slate-600 text-indigo-300 font-semibold shadow-sm">Guided
+                Scenario</button>
+        </div>
+    </header>
+
+    <!-- Background Decoration -->
+    <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-20">
+        <div class="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-indigo-500 blur-[120px]"></div>
+        <div class="absolute bottom-[0%] right-[0%] w-[40%] h-[40%] rounded-full bg-emerald-500 blur-[100px]"></div>
+    </div>
+
+    <!-- Main Workspace (3 columns: Chatbot, Sandbox, Curriculum) -->
+    <div class="flex-1 flex overflow-hidden z-10 w-full relative">
+
+        <!-- LEFT COLUMN: AI Tutor (Gemini Chatbot) -->
+        <aside
+            class="w-1/4 min-w-[300px] border-r border-slate-700 flex flex-col glass-panel bg-slate-900/60 shadow-xl overflow-hidden">
+            <div class="bg-indigo-900/40 border-b border-indigo-500/20 p-4 shrink-0">
+                <h2 class="font-bold text-slate-200 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                    AI Tutor (Gemini)
+                </h2>
+                <p class="text-[10px] text-slate-400 mt-1">Ask questions about algorithms while you train.</p>
+            </div>
+
+            <div id="chatHistory" class="flex-1 p-4 overflow-y-auto flex flex-col gap-3 scroll-smooth">
+                <div
+                    class="bg-slate-800/80 rounded-lg rounded-tl-none p-3 text-sm text-slate-300 border border-slate-700 self-start w-5/6">
+                    Hello! I'm your AI tutor. Adjust the sliders in the Sandbox, and feel free to ask me if you don't
+                    understand how a Learning Rate works or what a Neural Network is doing!
+                </div>
+            </div>
+
+            <div class="p-3 bg-slate-800/50 border-t border-slate-700 shrink-0">
+                <form id="chatForm" class="flex gap-2">
+                    <input type="text" id="chatInput" placeholder="Ask Gemini..."
+                        class="flex-1 bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 text-slate-200"
+                        autocomplete="off" required>
+                    <button type="submit"
+                        class="bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg px-3 py-2 transition flex items-center justify-center">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <!-- CENTER COLUMN: Interactive ML Sandbox -->
+        <main class="w-2/4 flex flex-col px-4 py-4 overflow-y-auto">
+
+            <!-- Sandbox Controls Header -->
+            <div
+                class="glass-panel p-4 rounded-xl border border-slate-700/50 flex flex-wrap gap-4 items-end mb-4 shadow-lg shrink-0">
+                <div class="space-y-1 w-full sm:w-1/4">
+                    <label class="text-[10px] uppercase font-bold text-slate-400">Algorithm</label>
+                    <select id="algorithmSelect"
+                        class="w-full bg-slate-800 border-b-2 border-slate-600 p-1.5 text-xs text-indigo-300 focus:outline-none focus:border-indigo-500">
+                        <option value="nn">Neural Network</option>
+                        <option value="lr">Linear Classifier</option>
+                        <option value="knn">K-Nearest Neighbors</option>
+                    </select>
+                </div>
+
+                <div class="space-y-1 flex-1 min-w-[150px]">
+                    <div class="flex justify-between text-[10px] uppercase font-bold text-slate-400">
+                        <span>Learning Rate</span>
+                        <span id="lrVal" class="text-indigo-400">0.01</span>
+                    </div>
+                    <input type="range" id="lrSlider" min="0.001" max="0.1" step="0.001" value="0.01" class="w-full">
+                </div>
+
+                <div class="space-y-1 flex-1 min-w-[150px]">
+                    <div class="flex justify-between text-[10px] uppercase font-bold text-slate-400">
+                        <span>Steps (Epochs)</span>
+                        <span id="epochVal" class="text-indigo-400">1</span>
+                    </div>
+                    <input type="range" id="epochSlider" min="1" max="1000" step="10" value="1" class="w-full">
+                </div>
+
+                <div class="flex gap-2 min-w-[120px] ml-auto">
+                    <button id="trainBtn"
+                        class="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 text-white rounded font-bold px-4 flex-1 text-sm shadow-lg shadow-emerald-500/20 active:scale-95 transition-all flex justify-center items-center gap-1 h-9">
+                        ▶ Train
+                    </button>
+                    <button id="resetBtn"
+                        class="bg-slate-700 hover:bg-slate-600 text-slate-300 rounded px-3 text-sm transition h-9 border border-slate-600">
+                        ↻
+                    </button>
+                </div>
+            </div>
+
+            <div id="scenarioCard"
+                class="bg-indigo-900/30 border border-indigo-500/50 text-indigo-200 p-3 rounded-lg mb-4 text-sm hidden shadow-sm">
+                <strong id="scenarioTitle" class="text-indigo-300 block mb-1"></strong>
+                <span id="scenarioDesc"></span>
+            </div>
+
+            <!-- Visualization Area -->
+            <div class="flex-1 flex flex-col gap-4 min-h-[500px]">
+
+                <!-- Main Plotly Canvas -->
+                <div class="flex-1 bg-card rounded-xl border border-slate-700/50 shadow-xl flex flex-col p-2 relative">
+                    <div
+                        class="flex items-center gap-2 p-2 border-b border-slate-800 absolute top-0 left-0 w-full z-10 bg-gradient-to-b from-[rgba(30,41,59,0.9)] to-transparent rounded-t-xl">
+                        <span class="text-xs font-bold text-slate-400 uppercase">Interactive Canvas</span>
+                        <span id="trainingIndicator"
+                            class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse hidden"></span>
+
+                        <div class="ml-auto flex gap-1 bg-slate-900/50 p-1 rounded-md border border-slate-700/50">
+                            <!-- Data Shape Buttons -->
+                            <button class="dataset-btn px-2 py-0.5 text-[10px] rounded hover:bg-slate-700 transition"
+                                data-type="moons">🌙 Moons</button>
+                            <button class="dataset-btn px-2 py-0.5 text-[10px] rounded hover:bg-slate-700 transition"
+                                data-type="circles">⭕ Circles</button>
+                            <button class="dataset-btn px-2 py-0.5 text-[10px] rounded hover:bg-slate-700 transition"
+                                data-type="linear">/ Linear</button>
+                        </div>
+                    </div>
+
+                    <div id="mainPlot" class="flex-1 w-full bg-slate-900/30 rounded-lg mt-8 z-0 cursor-crosshair"></div>
+
+                    <!-- Paintbrush overlay UI -->
+                    <div
+                        class="absolute bottom-4 right-4 bg-slate-800/90 border border-slate-600 p-2 rounded-lg backdrop-blur-sm shadow-xl flex gap-1 z-10 items-center">
+                        <span class="text-[10px] font-bold uppercase text-slate-400 mr-2">Paint Data:</span>
+                        <button id="paintRedBtn"
+                            class="paint-btn bg-red-500/20 text-red-400 border-2 border-red-500 rounded px-2 py-1 text-[10px] font-bold"
+                            data-cls="0">Class 0</button>
+                        <button id="paintBlueBtn"
+                            class="paint-btn bg-slate-900 text-slate-400 border border-slate-700 hover:border-blue-500 rounded px-2 py-1 text-[10px]"
+                            data-cls="1">Class 1</button>
+                    </div>
+                </div>
+
+                <!-- Loss Plotly Canvas (compressed) -->
+                <div
+                    class="h-40 bg-card rounded-xl border border-slate-700/50 shadow-xl flex flex-col p-2 shrink-0 relative overflow-hidden">
+                    <div class="absolute top-2 left-4 text-xs font-bold text-slate-400 uppercase z-10">Loss Curve <span
+                            id="lossDisplay" class="text-emerald-400 font-mono ml-2">1.000</span></div>
+                    <div id="lossPlot" class="flex-1 w-full"></div>
+                </div>
+
+            </div>
+        </main>
+
+        <!-- RIGHT COLUMN: Curriculum (Notes & Quiz) -->
+        <aside
+            class="w-1/4 min-w-[300px] border-l border-slate-700 glass-panel bg-slate-900/60 flex flex-col shadow-xl overflow-hidden p-4 space-y-4 overflow-y-auto">
+
+            <!-- Dynamic Notes Section -->
+            <div class="flex-1 bg-slate-800/40 border border-teal-500/20 rounded-xl p-4 flex flex-col">
+                <h2
+                    class="font-bold text-teal-400 flex items-center gap-2 mb-3 pb-2 border-b border-teal-500/20 uppercase text-sm tracking-wider">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253">
+                        </path>
+                    </svg>
+                    Study Notes
+                </h2>
+                <div id="notesContent" class="text-sm text-slate-300 leading-relaxed overflow-y-auto">
+                    <!-- Dynamic Content -->
+                    <h3 class="font-bold text-white mb-2">Multi-Layer Perceptron (NN)</h3>
+                    <p class="mb-2">A Neural Network mathematically simulates the human brain using connected "neurons."
+                    </p>
+                    <p class="mb-2">It excels at finding <b>non-linear boundaries</b>. Because it uses hidden layers and
+                        activation functions, it can bend its decision boundary around complex shapes like circles and
+                        moons.</p>
+                </div>
+            </div>
+
+            <!-- Interactive Quiz Section -->
+            <div class="bg-slate-800/40 border border-purple-500/20 rounded-xl p-4 shrink-0">
+                <h2
+                    class="font-bold text-purple-400 flex items-center gap-2 mb-3 pb-2 border-b border-purple-500/20 uppercase text-sm tracking-wider">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4">
+                        </path>
+                    </svg>
+                    Pop Quiz
+                </h2>
+                <div id="quizContainer">
+                    <!-- Dynamic Content -->
+                    <p id="quizQuestion" class="text-sm font-semibold text-slate-200 mb-3">Does a Neural Network use
+                        partial derivatives (Gradient Descent) to update its weights?</p>
+                    <div id="quizOptions" class="space-y-2">
+                        <button
+                            class="w-full text-left bg-slate-900 hover:bg-indigo-900 border border-slate-700 p-2 rounded text-sm transition"
+                            onclick="checkAnswer(true, this)">Yes, that's how it learns.</button>
+                        <button
+                            class="w-full text-left bg-slate-900 hover:bg-slate-800 border border-slate-700 p-2 rounded text-sm transition"
+                            onclick="checkAnswer(false, this)">No, it uses K-distances.</button>
+                    </div>
+                    <div id="quizFeedback" class="mt-3 text-xs font-bold hidden"></div>
+                </div>
+            </div>
+
+        </aside>
+
+    </div>
+
+    <!-- Script references -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+
+</html>
