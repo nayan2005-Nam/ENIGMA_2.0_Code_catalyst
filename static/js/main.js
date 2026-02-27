@@ -180,14 +180,133 @@ function setupEventListeners() {
     // Explain Graph Button
     const explainGraphBtn = document.getElementById('explainGraphBtn');
     if (explainGraphBtn) {
-        explainGraphBtn.addEventListener('click', () => {
-            chatInput.value = "Please explain the current graph and decision boundary.";
-            chatForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+        explainGraphBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            Plotly.toImage('mainPlot', { format: 'png', width: 300, height: 250 }).then(function (dataUrl) {
+                const msgHtml = `Please explain the current graph.<br><img src="${dataUrl}" class="w-full rounded mt-2 border border-slate-400/50">`;
+                appendMessage('user', msgHtml);
+
+                const loadingId = 'loading-' + Date.now();
+                appendMessage('ai', 'Analyzing graph...', loadingId);
+
+                const algo = document.getElementById('algorithmSelect').options[document.getElementById('algorithmSelect').selectedIndex].text;
+
+                fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: "Please explain the current graph including the formula and parameters.", algorithm: algo })
+                }).then(res => res.json()).then(data => {
+                    const loadingBox = document.getElementById(loadingId);
+                    if (loadingBox) loadingBox.innerHTML = data.response;
+                }).catch(err => {
+                    const loadingBox = document.getElementById(loadingId);
+                    if (loadingBox) loadingBox.innerHTML = "Error connecting to AI Tutor.";
+                });
+            });
         });
     }
 
     // Init Curriculum
     updateCurriculum();
+
+    // --- Hackathon WOW Features ---
+
+    // 1. Matrix Boot Sequence
+    const bootTerminal = document.getElementById('bootTerminal');
+    const bootSequence = document.getElementById('bootSequence');
+
+    if (bootSequence && bootTerminal) {
+        const bootLines = [
+            "Initializing Neo-Sandbox Kernel v4.2.0...",
+            "Loading Machine Learning Core modules...",
+            "Mounting /dev/ai/matrix...",
+            "Establishing Neural Interlink...",
+            "Bypassing firewall protocols... [OK]",
+            "Allocating VRAM (0.00000001 GB)...",
+            "System Ready. Welcome, Operator."
+        ];
+
+        let lineIdx = 0;
+        const bootInterval = setInterval(() => {
+            if (lineIdx < bootLines.length) {
+                const p = document.createElement('div');
+                p.className = 'boot-line text-green-400 text-sm font-bold';
+                p.textContent = `> ${bootLines[lineIdx]}`;
+                bootTerminal.appendChild(p);
+                lineIdx++;
+            } else {
+                clearInterval(bootInterval);
+                setTimeout(() => {
+                    bootSequence.classList.add('boot-done');
+                    setTimeout(() => bootSequence.remove(), 600);
+                }, 800);
+            }
+        }, 120);
+    }
+
+    // 2. View Python Code Feature
+    const viewCodeBtn = document.getElementById('viewCodeBtn');
+    const codeModal = document.getElementById('codeModal');
+    const closeCodeBtn = document.getElementById('closeCodeBtn');
+    const pythonCodeDisplay = document.getElementById('pythonCodeDisplay');
+    const copyCodeBtn = document.getElementById('copyCodeBtn');
+
+    if (viewCodeBtn && codeModal) {
+        viewCodeBtn.addEventListener('click', () => {
+            const algo = algorithmSelect.value;
+            const lr = lrSlider.value;
+            const epochs = epochSlider.value;
+
+            let pythonStr = `import numpy as np\n`;
+
+            if (algo === 'nn') {
+                pythonStr += `from sklearn.neural_network import MLPClassifier\n\n`;
+                pythonStr += `# Initialize Multi-Layer Perceptron (Neural Network)\n`;
+                pythonStr += `model = MLPClassifier(\n`;
+                pythonStr += `    hidden_layer_sizes=(16, 16),\n`;
+                pythonStr += `    activation='relu',\n`;
+                pythonStr += `    max_iter=${epochs},\n`;
+                pythonStr += `    learning_rate_init=${lr},\n`;
+                pythonStr += `    random_state=42\n`;
+                pythonStr += `)\n`;
+            } else if (algo === 'lr') {
+                pythonStr += `from sklearn.linear_model import SGDClassifier\n\n`;
+                pythonStr += `# Initialize Linear Classifier (Stochastic Gradient Descent)\n`;
+                pythonStr += `model = SGDClassifier(\n`;
+                pythonStr += `    loss='log_loss',\n`;
+                pythonStr += `    max_iter=${epochs},\n`;
+                pythonStr += `    learning_rate='constant',\n`;
+                pythonStr += `    eta0=${lr},\n`;
+                pythonStr += `    random_state=42\n`;
+                pythonStr += `)\n`;
+            } else if (algo === 'knn') {
+                pythonStr += `from sklearn.neighbors import KNeighborsClassifier\n\n`;
+                pythonStr += `# Initialize K-Nearest Neighbors\n`;
+                pythonStr += `model = KNeighborsClassifier(\n`;
+                pythonStr += `    n_neighbors=5\n`;
+                pythonStr += `)\n`;
+            }
+
+            pythonStr += `\n# Train the model on your dataset (X_train, y_train)\n`;
+            pythonStr += `model.fit(X_train, y_train)\n\n`;
+            pythonStr += `# Make predictions\n`;
+            pythonStr += `predictions = model.predict(X_test)\n`;
+
+            pythonCodeDisplay.textContent = pythonStr;
+            codeModal.classList.remove('hidden');
+        });
+
+        closeCodeBtn.addEventListener('click', () => {
+            codeModal.classList.add('hidden');
+        });
+
+        copyCodeBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(pythonCodeDisplay.textContent);
+            const originalText = copyCodeBtn.textContent;
+            copyCodeBtn.textContent = 'Copied!';
+            setTimeout(() => { copyCodeBtn.textContent = originalText; }, 2000);
+        });
+    }
 }
 
 // Phase 2 Logic
@@ -224,18 +343,20 @@ function updateCurriculum() {
         });
     }
 
-    // Update Quiz
-    quizQuestion.textContent = content.quiz.q;
-    quizOptions.innerHTML = '';
-    quizFeedback.classList.add('hidden');
+    // Update Quiz (if elements exist on current page)
+    if (quizQuestion && quizOptions && quizFeedback) {
+        quizQuestion.textContent = content.quiz.q;
+        quizOptions.innerHTML = '';
+        quizFeedback.classList.add('hidden');
 
-    content.quiz.options.forEach(opt => {
-        const btn = document.createElement('button');
-        btn.className = "w-full text-left bg-slate-900 border border-slate-700 hover:bg-slate-800 p-2 rounded text-sm transition text-slate-300";
-        btn.textContent = opt.text;
-        btn.onclick = () => checkAnswer(opt.correct, btn);
-        quizOptions.appendChild(btn);
-    });
+        content.quiz.options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = "w-full text-left bg-dark border border-accent hover:bg-card p-2 rounded text-sm transition text-secondary";
+            btn.textContent = opt.text;
+            btn.onclick = () => checkAnswer(opt.correct, btn);
+            quizOptions.appendChild(btn);
+        });
+    }
 }
 
 // Make sure global checkAnswer is available
@@ -265,7 +386,8 @@ async function handleChatSubmit(e) {
     if (!message) return;
 
     // 1. Append user message
-    appendMessage('user', message);
+    const escMessage = message.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    appendMessage('user', escMessage);
     chatInput.value = '';
 
     // 2. Append loading buble
@@ -286,11 +408,11 @@ async function handleChatSubmit(e) {
 
         // 4. Update loading bubble with real message
         const loadingBox = document.getElementById(loadingId);
-        if (loadingBox) loadingBox.textContent = data.response;
+        if (loadingBox) loadingBox.innerHTML = data.response;
 
     } catch (err) {
         const loadingBox = document.getElementById(loadingId);
-        if (loadingBox) loadingBox.textContent = "Error connecting to AI Tutor.";
+        if (loadingBox) loadingBox.innerHTML = "Error connecting to AI Tutor.";
     }
 }
 
@@ -301,9 +423,9 @@ function appendMessage(sender, text, id = null) {
     if (sender === 'user') {
         div.className = "bg-indigo-600 rounded-lg rounded-tr-none p-3 text-sm text-white border border-indigo-500/50 self-end w-5/6";
     } else {
-        div.className = "bg-slate-800/80 rounded-lg rounded-tl-none p-3 text-sm text-slate-300 border border-slate-700 self-start w-5/6";
+        div.className = "bg-slate-800/80 rounded-lg rounded-tl-none p-4 text-sm text-slate-300 border border-slate-700 self-start w-11/12 leading-relaxed whitespace-normal space-y-2";
     }
-    div.textContent = text;
+    div.innerHTML = text;
     chatHistory.appendChild(div);
     chatHistory.scrollTop = chatHistory.scrollHeight;
 }

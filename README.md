@@ -24,15 +24,37 @@ Alternatively you can set the variable in your shell before running the server:
 - **bash (WSL/git-bash)**: `export GEMINI_API_KEY="ya29.your-real-key"`
 
 Once the key is present, the backend will forward chat queries to the Gemini
-model; if it’s missing, a simple local fallback gives brief answers.
+model; if it’s missing, a simple local fallback gives brief answers. You can
+verify that the server runs in "online mode" by watching the log output on
+startup – it will say either "Gemini API key found; chat will use online mode."
+or "No GEMINI_API_KEY provided; using offline fallback responses."
 
 ## Running
+
+### Development mode (with automatic reload & debug toolbar):
+
+```bash
+set FLASK_ENV=development
+python app.py
+```
+
+Then open http://127.0.0.1:5000 in your browser (login with admin/password).
+
+### Production mode (safe for deployment):
+
+By default (without `FLASK_ENV=development`), debug mode is off:
 
 ```bash
 python app.py
 ```
 
-Then open http://127.0.0.1:5000 in your browser (login with admin/password).
+For actual production deployments, use a WSGI server like Gunicorn:
+
+```bash
+gunicorn -w 4 -b 0.0.0.0:5000 app:app
+```
+
+This avoids the Flask development server warning and properly handles concurrent requests.
 
 ## Notes
 

@@ -20,6 +20,9 @@ api_key = os.environ.get("GEMINI_API_KEY")
 client = None
 if api_key:
     client = genai.Client(api_key=api_key)
+    app.logger.info("Gemini API key found; attempting to use online mode (API must be enabled in Google Cloud).")
+else:
+    app.logger.warning("No GEMINI_API_KEY provided; using offline fallback responses.")
 
 # Global store for the current dataset to simulate statefulness 
 # (in a real app, you'd send data back and forth or use sessions, but this is simpler for the hackathon)
@@ -51,6 +54,12 @@ def logout():
     session.pop('username', None)
     return redirect(url_for('login'))
 
+@app.route('/quiz')
+def quiz():
+    if 'logged_in' not in session:
+        return redirect(url_for('login'))
+    return render_template('quiz_page.html')
+
 @app.route('/api/chat', methods=['POST'])
 def chat():
     data = request.json
@@ -58,9 +67,6 @@ def chat():
     algorithm_context = data.get('algorithm', 'Machine Learning')
 
     msg = user_message.lower()
-    # always handle graph explanation with fixed brief sentence
-    if "graph" in msg or "decision" in msg or "boundary" in msg:
-        return jsonify({'response': "This sandbox trains simple models and visualizes their decision boundaries; adjust hyperparameters and watch the curve."})
 
     # If the Gemini client isn't configured, provide a simple local fallback answer
     if not client:
@@ -73,10 +79,25 @@ def chat():
             return jsonify({'response': "This sandbox trains simple models and visualizes their decision boundaries; adjust hyperparameters and watch the curve."})
         # catch‑all generic reply
         return jsonify({'response': "Ask me about model training, learning rate, algorithms, or graph explanations."})
+    # Determine some basic dataset info to send to the AI
+    dataset_info = "unknown"
+    num_samples = 0
+    if current_data['X'] is not None:
+        num_samples = len(current_data['X'])
+        # just a generic descriptor for the prompt
+        dataset_info = f"a 2D dataset with {num_samples} data points"
+
     prompt = (
-        f"You are an expert AI tutor helping a student learn Machine Learning. "
-        f"They are currently looking at the '{algorithm_context}' algorithm in an interactive sandbox. "
-        f"The student says: '{user_message}'. Provide a brief, clear technical explanation appropriate for someone learning ML—use correct terminology and keep it to one or two sentences."
+        f"You are an expert Machine Learning engineer and AI researcher. "
+        f"The user is using an interactive sandbox exploring the '{algorithm_context}' algorithm on {dataset_info}. "
+        f"They are looking at a visualization of the decision boundary graph. "
+        f"User query: '{user_message}'.\n\n"
+        f"Provide a highly structured, precise, and professional explanation formatted in HTML. "
+        f"Use <b> tags for emphasis and <br> for line breaks. Make sure to include the following sections:\n"
+        f"1. <b>Explanation</b>: Brief intuition behind the decision boundary.\n"
+        f"2. <b>Formula/Math</b>: The mathematical intuition behind the boundary (use plain text for math, NO LaTeX).\n"
+        f"3. <b>Parameters/Features</b>: Key parameters affecting this graph (like weights, k-value, learning rate).\n"
+        f"IMPORTANT: You MUST write your entire response using ONLY basic HTML and plain English text. Do NOT use any LaTeX math notation, symbols, or equations (e.g. no $\mathbf{{x}}$, \mathbb{{R}}, etc). Only write standard English words."
     )
     
     try:
@@ -86,7 +107,18 @@ def chat():
         )
         return jsonify({'response': response.text})
     except Exception as e:
-        return jsonify({'response': f"Failed to get AI response: {str(e)}"})
+        # If API is disabled, expired, or other error, fall back to offline responses
+        msg = user_message.lower()
+        print(f"Gemini API Error: {e}. Falling back to offline mode.")
+        if "learning rate" in msg:
+            return jsonify({'response': "Learning rate is the step size during optimization; keep it small enough to converge and large enough to learn."})
+        if "neural network" in msg or "nn" in msg:
+            return jsonify({'response': "A neural network is layers of neurons that adjust weights via gradient descent."})
+        if "graph" in msg or "decision" in msg or "boundary" in msg:
+            return jsonify({'response': "This sandbox trains simple models and visualizes their decision boundaries; adjust hyperparameters and watch the curve."})
+        if "brief" in msg or "explain" in msg:
+            return jsonify({'response': "This sandbox trains simple models and visualizes their decision boundaries; adjust hyperparameters and watch the curve."})
+        return jsonify({'response': "Ask me about model training, learning rate, algorithms, or graph explanations."})
 
 @app.route('/api/dataset', methods=['GET'])
 def get_dataset():
@@ -222,4 +254,6 @@ def train():
     })
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    # Use debug mode only if FLASK_ENV=development is set
+    debug_mode = os.environ.get('FLASK_ENV') == 'development'
+    app.run(debug=debug_mode, port=5000)

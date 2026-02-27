@@ -5,9 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive ML Simulator</title>
-    
+
     <script src="https://cdn.tailwindcss.com"></script>
-    
+
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script>
@@ -15,8 +15,11 @@
             theme: {
                 extend: {
                     colors: {
-                        dark: '#0f172a',
-                        card: 'rgba(30, 41, 59, 0.7)',
+                        dark: '#000000',
+                        primary: '#ffffff',
+                        secondary: '#a3a3a3',
+                        accent: '#333333',
+                        card: '#0a0a0a',
                     }
                 }
             }
@@ -25,69 +28,71 @@
 </head>
 
 <body class="bg-dark text-slate-200 min-h-screen font-sans overflow-auto flex flex-col">
-    
-    <header
-        class="border-b border-slate-700 bg-slate-900/50 backdrop-blur-md p-4 flex justify-between items-center z-10 w-full relative">
+
+    <!-- Terminal Boot Sequence Overlay -->
+    <div id="bootSequence">
+        <div id="bootTerminal"></div>
+    </div>
+
+    <header class="border-b border-accent bg-dark p-4 flex justify-between items-center z-10 w-full relative">
         <div class="flex items-center space-x-6">
             <div class="flex items-center space-x-3">
                 <div
-                    class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold">
+                    class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-dark font-black text-xl">
                     ML</div>
-                <h1 class="text-xl font-semibold tracking-tight">Interactive ML Sandbox</h1>
+                <h1 class="text-2xl font-black tracking-tighter text-primary uppercase">Sandbox</h1>
             </div>
-            <nav class="hidden md:flex space-x-6 border-l border-slate-700 pl-6">
-                <a href="#" class="text-indigo-400 font-semibold text-sm hover:text-indigo-300 transition">⭐ Home</a>
-                <a href="#" class="text-slate-400 font-semibold text-sm hover:text-slate-200 transition">👤 Profile</a>
+            <nav class="hidden md:flex space-x-6 border-l border-accent pl-6">
+                <a href="#" class="text-secondary font-bold text-sm hover:text-primary transition">⭐ Core</a>
+                <a href="#" class="text-secondary font-bold text-sm hover:text-primary transition">👤 Operator</a>
             </nav>
         </div>
         <div class="flex items-center space-x-4">
-            <span class="text-xs text-slate-400 hidden sm:block">Logged in as: <span
-                    class="text-emerald-400 font-bold">{{ session.get('username', 'Guest') }}</span></span>
+            <span class="text-xs text-secondary hidden sm:block">Logged in as: <span class="text-primary font-bold">{{
+                    session.get('username', 'Guest') }}</span></span>
             <a href="{{ url_for('logout') }}"
-                class="text-xs px-3 py-1.5 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded border border-red-500/50 transition">Logout</a>
+                class="text-xs px-3 py-1.5 bg-accent/20 text-secondary hover:text-primary rounded border border-accent transition">Logout</a>
             <button id="scenarioBtn"
-                class="text-sm px-4 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-md transition-colors border border-slate-600 text-indigo-300 font-semibold shadow-sm">Guided
+                class="text-sm px-4 py-1.5 bg-card hover:bg-accent rounded-md transition-colors border border-accent text-primary font-semibold">Guided
                 Scenario</button>
         </div>
     </header>
 
-    
-    <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-20">
-        <div class="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-indigo-500 blur-[120px]"></div>
-        <div class="absolute bottom-[0%] right-[0%] w-[40%] h-[40%] rounded-full bg-emerald-500 blur-[100px]"></div>
+    <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-0">
+        <!-- Removed background blobs for minimalist look -->
     </div>
 
-    
+
     <div class="flex-1 flex overflow-hidden z-10 w-full relative">
 
-        
-        <aside
-            class="w-1/4 min-w-[300px] border-r border-slate-700 flex flex-col glass-panel bg-slate-900/60 shadow-xl overflow-hidden">
-            <div class="bg-indigo-900/40 border-b border-indigo-500/20 p-4 shrink-0">
-                <h2 class="font-bold text-slate-200 flex items-center gap-2">
-                    <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+        <aside class="w-1/4 min-w-[300px] border-r border-accent flex flex-col bg-card overflow-hidden text-primary">
+            <div class="bg-dark/50 border-b border-accent p-4 shrink-0">
+                <h2 class="font-bold text-primary flex items-center gap-2 tracking-wide uppercase text-sm">
+                    <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                     </svg>
-                    AI Tutor (Gemini)
+                    AI System
                 </h2>
-                <p class="text-[10px] text-slate-400 mt-1">Ask questions about algorithms while you train.</p>
+                <p class="text-[10px] text-secondary mt-1 uppercase font-semibold tracking-wider">Interface Ready</p>
             </div>
 
             <div id="chatHistory" class="flex-1 p-4 overflow-y-auto flex flex-col gap-3 scroll-smooth">
                 <div
-                    class="bg-slate-800/80 rounded-lg rounded-tl-none p-3 text-sm text-slate-300 border border-slate-700 self-start w-5/6">
-                    Hello! I'm your AI tutor. Ask me technical questions about machine learning while you train — try: learning rate, neural networks, training steps, or ask for a graph explanation.
+                    class="bg-dark rounded-md rounded-tl-none p-4 text-sm text-secondary border border-accent self-start w-11/12 leading-relaxed">
+                    System initialized. I am your neutral ML assistant. Awaiting queries regarding optimization
+                    algorithms or diagnostics.
                 </div>
             </div>
 
-            <div class="p-3 bg-slate-800/50 border-t border-slate-700 shrink-0">
+            <div class="p-3 bg-dark/50 border-t border-accent shrink-0">
                 <form id="chatForm" class="flex gap-2">
-                    <input type="text" id="chatInput" placeholder="Try: learning rate, neural networks, training steps, graph explanation"
-                        class="flex-1 bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 text-slate-200"
+                    <input type="text" id="chatInput" placeholder="Enter query..."
+                        class="flex-1 bg-card border border-accent rounded-md px-3 py-2 text-sm focus:outline-none focus:border-primary text-primary placeholder-secondary"
                         autocomplete="off" required>
                     <button type="submit"
-                        class="bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg px-3 py-2 transition flex items-center justify-center">
+                        class="bg-primary hover:bg-secondary text-dark rounded-md px-4 py-2 transition flex items-center justify-center">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
@@ -97,16 +102,15 @@
             </div>
         </aside>
 
-       
+
         <main class="w-2/4 flex flex-col px-4 py-4 overflow-y-auto">
 
-           
-            <div
-                class="glass-panel p-4 rounded-xl border border-slate-700/50 flex flex-wrap gap-4 items-end mb-4 shadow-lg shrink-0">
+
+            <div class="bg-card p-4 rounded-xl border border-accent flex flex-wrap gap-4 items-end mb-4 shrink-0">
                 <div class="space-y-1 w-full sm:w-1/4">
-                    <label class="text-[10px] uppercase font-bold text-slate-400">Algorithm</label>
+                    <label class="text-[10px] uppercase font-bold text-secondary">Algorithm</label>
                     <select id="algorithmSelect"
-                        class="w-full bg-slate-800 border-b-2 border-slate-600 p-1.5 text-xs text-indigo-300 focus:outline-none focus:border-indigo-500">
+                        class="w-full bg-dark border-b border-accent p-1.5 text-xs text-primary focus:outline-none focus:border-primary transition">
                         <option value="nn">Neural Network</option>
                         <option value="lr">Linear Classifier</option>
                         <option value="knn">K-Nearest Neighbors</option>
@@ -114,144 +118,177 @@
                 </div>
 
                 <div class="space-y-1 flex-1 min-w-[150px]">
-                    <div class="flex justify-between text-[10px] uppercase font-bold text-slate-400">
-                        <span class="flex items-center gap-1">
-                            <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                    <div class="flex justify-between text-[10px] uppercase font-bold">
+                        <span class="flex items-center gap-1 text-secondary">
+                            <svg class="w-3.5 h-3.5 text-secondary" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4">
+                                </path>
+                            </svg>
                             Learning Rate
                         </span>
-                        <span id="lrVal" class="text-indigo-400">0.01</span>
+                        <span id="lrVal" class="text-primary">0.01</span>
                     </div>
-                    <input type="range" id="lrSlider" min="0.001" max="0.1" step="0.001" value="0.01" class="w-full">
+                    <input type="range" id="lrSlider" min="0.001" max="0.1" step="0.001" value="0.01"
+                        class="w-full accent-primary">
                 </div>
 
                 <div class="space-y-1 flex-1 min-w-[150px]">
-                    <div class="flex justify-between text-[10px] uppercase font-bold text-slate-400">
-                        <span>Steps (Epochs)</span>
-                        <span id="epochVal" class="text-indigo-400">1</span>
+                    <div class="flex justify-between text-[10px] uppercase font-bold">
+                        <span class="text-secondary">Epochs</span>
+                        <span id="epochVal" class="text-primary">1</span>
                     </div>
-                    <input type="range" id="epochSlider" min="1" max="1000" step="10" value="1" class="w-full">
+                    <input type="range" id="epochSlider" min="1" max="1000" step="10" value="1"
+                        class="w-full accent-primary">
                 </div>
 
                 <div class="flex gap-2 min-w-[150px] ml-auto">
                     <button id="trainBtn"
-                        class="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 text-white rounded font-bold px-4 flex-1 text-sm shadow-lg shadow-emerald-500/20 active:scale-95 transition-all flex justify-center items-center gap-1 h-9">
-                        ▶ Train
+                        class="bg-primary hover:bg-secondary text-dark font-black rounded px-4 flex-1 text-sm border border-primary active:scale-95 transition-all flex justify-center items-center gap-1 h-9 uppercase tracking-wider">
+                        ▶ Execute
                     </button>
                     <button id="resetBtn" title="Generate New Data"
-                        class="bg-indigo-600 hover:bg-indigo-500 text-white rounded px-3 text-sm transition h-9 border border-indigo-500 shadow-md flex justify-center items-center gap-1.5">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg>
-                        <span class="hidden xl:inline">Generate Data</span>
+                        class="bg-dark hover:bg-card text-primary rounded px-3 text-sm transition h-9 border border-accent flex justify-center items-center gap-1.5">
+                        <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4">
+                            </path>
+                        </svg>
+                        <span class="hidden xl:inline text-secondary">Regen</span>
                     </button>
                 </div>
             </div>
 
             <!-- Metrics Row (Performance & Accuracy) -->
             <div class="flex gap-4 mb-4 shrink-0">
-                <div class="flex-1 bg-slate-800/60 p-3 rounded-xl border border-slate-700/50 flex items-center justify-between shadow-md">
+                <div class="flex-1 bg-card p-3 rounded-xl border border-accent flex items-center justify-between">
                     <div class="flex items-center gap-3">
-                        <div class="p-2 bg-amber-500/20 rounded-lg text-amber-400">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        <div class="p-2 bg-dark rounded-lg text-primary border border-accent">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
                         </div>
                         <div>
-                            <div class="text-[10px] uppercase font-bold text-slate-400">Model Performance (Loss)</div>
-                            <div class="text-lg text-slate-200 font-mono" id="perfDisplay">Ready</div>
+                            <div class="text-[10px] uppercase font-bold text-secondary">System Loss</div>
+                            <div class="text-lg text-primary font-mono" id="perfDisplay">Ready</div>
                         </div>
                     </div>
                 </div>
                 <!-- Model Accuracy -->
-                <div class="flex-1 bg-slate-800/60 p-3 rounded-xl border border-slate-700/50 flex items-center justify-between shadow-md">
+                <div class="flex-1 bg-card p-3 rounded-xl border border-accent flex items-center justify-between">
                     <div class="flex items-center gap-3">
-                        <div class="p-2 bg-emerald-500/20 rounded-lg text-emerald-400">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <div class="p-2 bg-dark rounded-lg text-primary border border-accent">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
                         </div>
                         <div>
-                            <div class="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
-                                <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>
+                            <div class="text-[10px] uppercase font-bold text-secondary flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z">
+                                    </path>
+                                </svg>
                                 Model Accuracy
                             </div>
-                            <div class="text-lg text-slate-200 font-mono" id="accDisplay">0.00%</div>
+                            <div class="text-lg text-primary font-mono" id="accDisplay">0.00%</div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div id="scenarioCard"
-                class="bg-indigo-900/30 border border-indigo-500/50 text-indigo-200 p-3 rounded-lg mb-4 text-sm hidden shadow-sm">
-                <strong id="scenarioTitle" class="text-indigo-300 block mb-1"></strong>
-                <span id="scenarioDesc"></span>
+            <div id="scenarioCard" class="bg-card border border-accent p-3 rounded-lg mb-4 text-sm hidden">
+                <strong id="scenarioTitle" class="text-primary block mb-1"></strong>
+                <span id="scenarioDesc" class="text-secondary"></span>
             </div>
 
-            
+
             <div class="flex-1 flex flex-col gap-4 min-h-[500px]">
 
-              
-                <div class="flex-1 bg-card rounded-xl border border-slate-700/50 shadow-xl flex flex-col p-2 relative">
+                <div class="flex-1 bg-card rounded-xl border border-accent flex flex-col p-2 relative">
                     <div
-                        class="flex items-center gap-2 p-2 border-b border-slate-800 absolute top-0 left-0 w-full z-10 bg-gradient-to-b from-[rgba(30,41,59,0.9)] to-transparent rounded-t-xl">
-                        <span class="text-xs font-bold text-slate-400 uppercase">Interactive Canvas</span>
+                        class="flex items-center gap-2 p-2 border-b border-accent absolute top-0 left-0 w-full z-10 bg-dark/90 rounded-t-xl">
+                        <span class="text-xs font-bold text-secondary uppercase tracking-widest">Interactive
+                            Canvas</span>
                         <span id="trainingIndicator"
-                            class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse hidden"></span>
+                            class="w-2 h-2 rounded-full bg-primary animate-pulse hidden"></span>
 
-<div class="ml-auto flex gap-1 bg-slate-900/50 p-1 rounded-md border border-slate-700/50 items-center">
+                        <div class="ml-auto flex gap-1 bg-card p-1 rounded-md border border-accent items-center">
                             <!-- dataset selectors -->
-                            <button class="dataset-btn px-2 py-0.5 text-[10px] rounded hover:bg-slate-700 transition"
+                            <button
+                                class="dataset-btn px-2 py-0.5 text-[10px] rounded hover:bg-accent hover:text-primary transition text-secondary"
                                 data-type="moons">🌙 Moons</button>
-                            <button class="dataset-btn px-2 py-0.5 text-[10px] rounded hover:bg-slate-700 transition"
+                            <button
+                                class="dataset-btn px-2 py-0.5 text-[10px] rounded hover:bg-accent hover:text-primary transition text-secondary"
                                 data-type="circles">⭕ Circles</button>
-                            <button class="dataset-btn px-2 py-0.5 text-[10px] rounded hover:bg-slate-700 transition"
+                            <button
+                                class="dataset-btn px-2 py-0.5 text-[10px] rounded hover:bg-accent hover:text-primary transition text-secondary"
                                 data-type="linear">/ Linear</button>
 
                             <!-- new controls: regenerate and import -->
-                            <button id="generateBtn" class="tool-btn px-2 py-0.5 text-[10px] rounded hover:bg-slate-700 transition"
+                            <button id="viewCodeBtn"
+                                class="tool-btn px-2 py-0.5 text-[10px] rounded hover:bg-accent transition border-l border-accent ml-1 pl-2 text-secondary hover:text-primary font-mono uppercase tracking-widest"
+                                title="View Python Code equivalent">{'</>'}</button>
+                            <button id="generateBtn"
+                                class="tool-btn px-2 py-0.5 text-[10px] rounded hover:bg-accent transition border-l border-accent ml-1 pl-2 text-secondary hover:text-primary"
                                 title="Regenerate sample data">🎲</button>
-                            <button id="importBtn" class="tool-btn px-2 py-0.5 text-[10px] rounded hover:bg-slate-700 transition"
+                            <button id="importBtn"
+                                class="tool-btn px-2 py-0.5 text-[10px] rounded hover:bg-accent transition text-secondary hover:text-primary"
                                 title="Import CSV dataset">📁</button>
                             <input type="file" id="fileInput" accept=".csv" class="hidden" />
                         </div>
                     </div>
 
-                    <div id="mainPlot" class="flex-1 w-full bg-slate-900/30 rounded-lg mt-8 z-0 cursor-crosshair"></div>
+                    <div id="mainPlot" class="flex-1 w-full bg-dark/50 rounded-lg mt-8 z-0 cursor-crosshair"></div>
 
                     <!-- Explain Graph Overlay -->
                     <div class="absolute bottom-4 left-4 z-10">
-                        <button id="explainGraphBtn" class="bg-indigo-600/90 hover:bg-indigo-500 text-white text-[10px] font-bold py-1.5 px-3 rounded flex items-center gap-1.5 border border-indigo-500/50 backdrop-blur-sm transition uppercase tracking-wider shadow-lg">
-                            <svg class="w-4 h-4 text-indigo-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path></svg>
-                            Graph Explanation
+                        <button id="explainGraphBtn"
+                            class="bg-card hover:bg-accent text-primary text-[10px] font-bold py-1.5 px-3 rounded flex items-center gap-1.5 border border-secondary transition uppercase tracking-wider">
+                            <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z">
+                                </path>
+                            </svg>
+                            Neural Diagnostics
                         </button>
                     </div>
 
                     <!-- Paintbrush overlay UI -->
                     <div
-                        class="absolute bottom-4 right-4 bg-slate-800/90 border border-slate-600 p-2 rounded-lg backdrop-blur-sm shadow-xl flex gap-1 z-10 items-center">
-                        <span class="text-[10px] font-bold uppercase text-slate-400 mr-2">Paint Data:</span>
+                        class="absolute bottom-4 right-4 bg-card border border-accent p-2 rounded-lg flex gap-1 z-10 items-center">
+                        <span class="text-[10px] font-bold uppercase text-secondary mr-2">Data Injector:</span>
                         <button id="paintRedBtn"
-                            class="paint-btn bg-red-500/20 text-red-400 border-2 border-red-500 rounded px-2 py-1 text-[10px] font-bold"
-                            data-cls="0">Class 0</button>
+                            class="paint-btn bg-dark text-primary border border-secondary rounded px-2 py-1 text-[10px] font-bold"
+                            data-cls="0">Type 0 (Alpha)</button>
                         <button id="paintBlueBtn"
-                            class="paint-btn bg-slate-900 text-slate-400 border border-slate-700 hover:border-blue-500 rounded px-2 py-1 text-[10px]"
-                            data-cls="1">Class 1</button>
+                            class="paint-btn bg-dark text-secondary border border-accent hover:border-secondary hover:text-primary rounded px-2 py-1 text-[10px] transition"
+                            data-cls="1">Type 1 (Beta)</button>
                     </div>
                 </div>
 
-                
                 <div
-                    class="h-40 bg-card rounded-xl border border-slate-700/50 shadow-xl flex flex-col p-2 shrink-0 relative overflow-hidden">
-                    <div class="absolute top-2 left-4 text-xs font-bold text-slate-400 uppercase z-10">Loss Curve <span
-                            id="lossDisplay" class="text-emerald-400 font-mono ml-2">1.000</span></div>
+                    class="h-40 bg-card rounded-xl border border-accent flex flex-col p-2 shrink-0 relative overflow-hidden">
+                    <div class="absolute top-2 left-4 text-xs font-bold text-secondary uppercase tracking-widest z-10">
+                        Entropy Curve <span id="lossDisplay" class="text-primary font-mono ml-2">1.000</span>
+                    </div>
                     <div id="lossPlot" class="flex-1 w-full"></div>
                 </div>
 
             </div>
         </main>
 
-        
-        <aside
-            class="w-1/4 min-w-[300px] border-l border-slate-700 glass-panel bg-slate-900/60 flex flex-col shadow-xl overflow-hidden p-4 space-y-4 overflow-y-auto">
 
-            
-            <div class="flex-1 bg-slate-800/40 border border-teal-500/20 rounded-xl p-4 flex flex-col">
+        <aside
+            class="w-1/4 min-w-[300px] border-l border-accent bg-card flex flex-col overflow-hidden p-4 space-y-4 overflow-y-auto">
+
+            <div class="flex-1 bg-dark/50 border border-accent rounded-xl p-4 flex flex-col">
                 <h2
-                    class="font-bold text-teal-400 flex items-center gap-2 mb-3 pb-2 border-b border-teal-500/20 uppercase text-sm tracking-wider">
+                    class="font-bold text-primary flex items-center gap-2 mb-3 pb-2 border-b border-accent uppercase text-sm tracking-wider">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253">
@@ -259,9 +296,8 @@
                     </svg>
                     Study Notes
                 </h2>
-                <div id="notesContent" class="text-sm text-slate-300 leading-relaxed overflow-y-auto">
-                   
-                    <h3 class="font-bold text-white mb-2">Multi-Layer Perceptron (NN)</h3>
+                <div id="notesContent" class="text-sm text-secondary leading-relaxed overflow-y-auto">
+                    <h3 class="font-bold text-primary mb-2">Multi-Layer Perceptron (NN)</h3>
                     <p class="mb-2">A Neural Network mathematically simulates the human brain using connected "neurons."
                     </p>
                     <p class="mb-2">It excels at finding <b>non-linear boundaries</b>. Because it uses hidden layers and
@@ -270,38 +306,59 @@
                 </div>
             </div>
 
-            
-            <div class="bg-slate-800/40 border border-purple-500/20 rounded-xl p-4 shrink-0">
+            <div class="bg-dark/50 border border-accent rounded-xl p-4 shrink-0 flex flex-col items-center text-center">
                 <h2
-                    class="font-bold text-purple-400 flex items-center gap-2 mb-3 pb-2 border-b border-purple-500/20 uppercase text-sm tracking-wider">
+                    class="font-bold text-primary flex items-center justify-center gap-2 mb-3 pb-2 border-b border-accent uppercase text-sm tracking-wider w-full">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4">
                         </path>
                     </svg>
-                    Pop Quiz
+                    Knowledge Assessment
                 </h2>
-                <div id="quizContainer">
-                    
-                    <p id="quizQuestion" class="text-sm font-semibold text-slate-200 mb-3">Does a Neural Network use
-                        partial derivatives (Gradient Descent) to update its weights?</p>
-                    <div id="quizOptions" class="space-y-2">
-                        <button
-                            class="w-full text-left bg-slate-900 hover:bg-indigo-900 border border-slate-700 p-2 rounded text-sm transition"
-                            onclick="checkAnswer(true, this)">Yes, that's how it learns.</button>
-                        <button
-                            class="w-full text-left bg-slate-900 hover:bg-slate-800 border border-slate-700 p-2 rounded text-sm transition"
-                            onclick="checkAnswer(false, this)">No, it uses K-distances.</button>
-                    </div>
-                    <div id="quizFeedback" class="mt-3 text-xs font-bold hidden"></div>
-                </div>
+                <p class="text-xs text-secondary mb-4">Test your understanding of ML algorithms and decision boundaries
+                    in the full 10-question diagnostics suite.</p>
+                <a href="{{ url_for('quiz') }}"
+                    class="w-full bg-primary hover:bg-secondary text-dark font-bold uppercase tracking-widest text-xs py-2.5 rounded transition shadow-lg text-center block"
+                    target="_blank">
+                    Launch Diagnostics Quiz
+                </a>
             </div>
 
         </aside>
 
     </div>
 
-    
+    <!-- View Python Code Modal -->
+    <div id="codeModal" class="fixed inset-0 bg-dark/90 backdrop-blur-sm z-50 hidden flex justify-center items-center">
+        <div
+            class="bg-card border border-accent rounded-xl w-3/4 max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[80vh]">
+            <div class="flex justify-between items-center p-4 border-b border-accent bg-dark/80">
+                <h3 class="font-bold text-primary flex items-center gap-2 uppercase tracking-widest text-sm">
+                    <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                    </svg>
+                    Python Implementation
+                </h3>
+                <button id="closeCodeBtn"
+                    class="text-secondary hover:text-primary transition text-lg font-bold leading-none">&times;</button>
+            </div>
+            <div class="p-4 overflow-y-auto w-full flex-1 bg-dark">
+                <pre class="font-mono text-xs text-primary whitespace-pre-wrap"><code id="pythonCodeDisplay" class="language-python">
+# Generating Python template...
+</code></pre>
+            </div>
+            <div class="p-3 border-t border-accent bg-card text-right flex justify-between items-center">
+                <span class="text-[10px] text-secondary uppercase tracking-widest">Powered by Scikit-Learn</span>
+                <button id="copyCodeBtn"
+                    class="bg-dark border border-accent hover:bg-accent transition text-primary text-xs font-bold uppercase py-1.5 px-4 rounded tracking-wider">Copy
+                    code</button>
+            </div>
+        </div>
+    </div>
+
+
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 

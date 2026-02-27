@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ML Pop Quiz - Neo-Sandbox</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: '#000000',
+                        primary: '#ffffff',
+                        secondary: '#a3a3a3',
+                        accent: '#333333',
+                        card: '#0a0a0a',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="bg-dark text-primary min-h-screen font-sans flex flex-col p-6 items-center">
+
+    <div class="w-full max-w-4xl">
+        <div class="flex justify-between items-center mb-8 border-b border-accent pb-4">
+            <h1 class="text-3xl font-black uppercase tracking-widest text-primary flex items-center gap-3">
+                <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                ML Knowledge Diagnostics
+            </h1>
+            <a href="{{ url_for('index') }}"
+                class="text-secondary hover:text-primary transition border border-accent rounded px-4 py-2 hover:bg-card uppercase text-sm font-bold tracking-wider">Return
+                to Canvas</a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="quizContainer">
+            <!-- Question 1 -->
+            <div class="bg-card border border-accent rounded-xl p-5 quiz-card">
+                <p class="text-sm font-semibold mb-4 min-h-[40px]">1. Does a Neural Network use partial derivatives
+                    (Gradient Descent) to update its weights?</p>
+                <div class="space-y-2">
+                    <button
+                        class="w-full text-left bg-dark border border-accent p-2.5 rounded text-sm transition text-secondary hover:text-primary hover:bg-accent"
+                        onclick="checkAnswer(true, this, 'Correct! Gradient Descent computes partial derivatives of the loss with respect to weights.')">Yes,
+                        that's how it learns.</button>
+                    <button
+                        class="w-full text-left bg-dark border border-accent p-2.5 rounded text-sm transition text-secondary hover:text-primary hover:bg-accent"
+                        onclick="checkAnswer(false, this)">No, it uses K-distances.</button>
+                </div>
+                <div class="feedback mt-3 text-xs font-bold hidden"></div>
+            </div>
+
+            <!-- Question 2 -->
+            <div class="bg-card border border-accent rounded-xl p-5 quiz-card">
+                <p class="text-sm font-semibold mb-4 min-h-[40px]">2. What does 'K' stand for in the K-Nearest Neighbors
+                    algorithm?</p>
+                <div class="space-y-2">
+                    <button
+                        class="w-full text-left bg-dark border border-accent p-2.5 rounded text-sm transition text-secondary hover:text-primary hover:bg-accent"
+                        onclick="checkAnswer(false, this)">The number of features in the dataset.</button>
+                    <button
+                        class="w-full text-left bg-dark border border-accent p-2.5 rounded text-sm transition text-secondary hover:text-primary hover:bg-accent"
+                        onclick="checkAnswer(true, this, 'Correct! K represents how many nearby data points cast a vote.')">The
+                        number of closest training examples used to classify a new point.</button>
+                </div>
+                <div class="feedback mt-3 text-xs font-bold hidden"></div>
+            </div>
+
+            <!-- Question 3 -->
+            <div class="bg-card border border-accent rounded-xl p-5 quiz-card">
+                <p class="text-sm font-semibold mb-4 min-h-[40px]">3. Can a standalone Logistic Regression algorithm
+                    naturally learn the 'Moons' dataset geometry without synthetic features?</p>
+                <div class="space-y-2">
+                    <button
+                        class="w-full text-left bg-dark border border-accent p-2.5 rounded text-sm transition text-secondary hover:text-primary hover:bg-accent"
+                        onclick="checkAnswer(true, this, 'Correct! LR only draws straight lines (hyperplanes) unless feature engineering is applied.')">No,
+                        because it only produces linear decision boundaries.</button>
+                    <button
+                        class="w-full text-left bg-dark border border-accent p-2.5 rounded text-sm transition text-secondary hover:text-primary hover:bg-accent"
+                        onclick="checkAnswer(false, this)">Yes, it can bend to fit any shape.</button>
+                </div>
+                <div class="feedback mt-3 text-xs font-bold hidden"></div>
+            </div>
+
+            <!-- Question 4 -->
+            <div class="bg-card border border-accent rounded-xl p-5 quiz-card">
+                <p class="text-sm font-semibold mb-4 min-h-[40px]">4. What is the purpose of an 'Activation Function' in
+                    a Neural Network?</p>
+                <div class="space-y-2">
+                    <button
+                        class="w-full text-left bg-dark border border-accent p-2.5 rounded text-sm transition text-secondary hover:text-primary hover:bg-accent"
+                        onclick="checkAnswer(true, this, 'Correct! Without activation functions, a deep network is just a giant linear regression model.')">To
+                        introduce non-linearity, allowing the network to learn complex patterns.</button>
+                    <button
+                        class="w-full text-left bg-dark border border-accent p-2.5 rounded text-sm transition text-secondary hover:text-primary hover:bg-accent"
+                        onclick="checkAnswer(false, this)">To speed up the hardware processing time.</button>
+                </div>
+                <div class="feedback mt-3 text-xs font-bold hidden"></div>
+            </div>
+
+            <!-- Question 5 -->
+            <div class="bg-card border border-accent rounded-xl p-5 quiz-card">
+                <p class="text-sm font-semibold mb-4 min-h-[40px]">5. Which metric is used to penalize distance when
+                    evaluating the error of continuous output models vs classification models?</p>
+                <div class="space-y-2">
+                    <button
+                        class="w-full text-left bg-dark border border-accent p-2.5 rounded text-sm transition text-secondary hover:text-primary hover:bg-accent"
+                        onclick="checkAnswer(true, this, 'Correct! MSE is for regression, while Cross-Entropy is for classification probabilities.')">Mean
+                        Squared Error vs Cross-Entropy Loss</button>
+                    <button
+                        class="w-full text-left bg-dark border border-accent p-2.5 rounded text-sm transition text-secondary hover:text-primary hover:bg-accent"
+                        onclick="checkAnswer(false, this)">Accuracy vs F1-Score</button>
+                </div>
+                <div class="feedback mt-3 text-xs font-bold hidden"></div>
+            </div>
+
+            <!-- Question 6 -->
+            <div class="bg-card border border-accent rounded-xl p-5 quiz-card">
+                <p class="text-sm font-semibold mb-4 min-h-[40px]">6. What happens if the 'Learning Rate' in a network
+                    is set too high?</p>
+                <div class="space-y-2">
+                    <button
+                        class="w-full text-left bg-dark border border-accent p-2.5 rounded text-sm transition text-secondary hover:text-primary hover:bg-accent"
+                        onclick="checkAnswer(false, this)">The model learns perfectly but takes a very long
+                        time.</button>
+                    <button
+                        class="w-full text-left bg-dark border border-accent p-2.5 rounded text-sm transition text-secondary hover:text-primary hover:bg-accent"
+                        onclick="checkAnswer(true, this, 'Correct! A high learning rate causes the optimizer to overshoot the minimum loss.')">The
+                        model may fail to converge, oscillating wildly or diverging.</button>
+                </div>
+                <div class="feedback mt-3 text-xs font-bold hidden"></div>
+            </div>
+
+            <!-- Question 7 -->
+            <div class="bg-card border border-accent rounded-xl p-5 quiz-card">
+                <p class="text-sm font-semibold mb-4 min-h-[40px]">7. In standard K-Nearest Neighbors, does the model
+                    undergo a 'training' phase where weights are updated?</p>
+                <div class="space-y-2">
+                    <button
+                        class="w-full text-left bg-dark border border-accent p-2.5 rounded text-sm transition text-secondary hover:text-primary hover:bg-accent"
+                        onclick="checkAnswer(false, this)">Yes, it uses backpropagation to update neighbor
+                        weights.</button>
+                    <button
+                        class="w-full text-left bg-dark border border-accent p-2.5 rounded text-sm transition text-secondary hover:text-primary hover:bg-accent"
+                        onclick="checkAnswer(true, this, 'Correct! KNN is a lazy learner; it simply stores the data and computes distances at runtime.')">No,
+                        it simply stores the dataset in memory.</button>
+                </div>
+                <div class="feedback mt-3 text-xs font-bold hidden"></div>
+            </div>
+
+            <!-- Question 8 -->
+            <div class="bg-card border border-accent rounded-xl p-5 quiz-card">
+                <p class="text-sm font-semibold mb-4 min-h-[40px]">8. What is 'Overfitting' in machine learning?</p>
+                <div class="space-y-2">
+                    <button
+                        class="w-full text-left bg-dark border border-accent p-2.5 rounded text-sm transition text-secondary hover:text-primary hover:bg-accent"
+                        onclick="checkAnswer(true, this, 'Correct! Overfitting occurs when models learn noise instead of the signal.')">When
+                        a model memorizes the training data but fails to generalize to new data.</button>
+                    <button
+                        class="w-full text-left bg-dark border border-accent p-2.5 rounded text-sm transition text-secondary hover:text-primary hover:bg-accent"
+                        onclick="checkAnswer(false, this)">When a model is too simple to capture the underlying data
+                        patterns.</button>
+                </div>
+                <div class="feedback mt-3 text-xs font-bold hidden"></div>
+            </div>
+
+            <!-- Question 9 -->
+            <div class="bg-card border border-accent rounded-xl p-5 quiz-card">
+                <p class="text-sm font-semibold mb-4 min-h-[40px]">9. Which algorithm typically requires
+                    standardizing/normalizing input features to function optimally?</p>
+                <div class="space-y-2">
+                    <button
+                        class="w-full text-left bg-dark border border-accent p-2.5 rounded text-sm transition text-secondary hover:text-primary hover:bg-accent"
+                        onclick="checkAnswer(true, this, 'Correct! KNN relies on distance metrics (like Euclidean), so unscaled features will heavily distort distances.')">K-Nearest
+                        Neighbors (KNN)</button>
+                    <button
+                        class="w-full text-left bg-dark border border-accent p-2.5 rounded text-sm transition text-secondary hover:text-primary hover:bg-accent"
+                        onclick="checkAnswer(false, this)">Decision Trees</button>
+                </div>
+                <div class="feedback mt-3 text-xs font-bold hidden"></div>
+            </div>
+
+            <!-- Question 10 -->
+            <div class="bg-card border border-accent rounded-xl p-5 quiz-card">
+                <p class="text-sm font-semibold mb-4 min-h-[40px]">10. What does an 'Epoch' represent during neural
+                    network training?</p>
+                <div class="space-y-2">
+                    <button
+                        class="w-full text-left bg-dark border border-accent p-2.5 rounded text-sm transition text-secondary hover:text-primary hover:bg-accent"
+                        onclick="checkAnswer(false, this)">A single forward pass of one batch of data.</button>
+                    <button
+                        class="w-full text-left bg-dark border border-accent p-2.5 rounded text-sm transition text-secondary hover:text-primary hover:bg-accent"
+                        onclick="checkAnswer(true, this, 'Correct! An epoch represents one complete cycle through all the training data.')">One
+                        complete pass of the entire training dataset through the algorithm.</button>
+                </div>
+                <div class="feedback mt-3 text-xs font-bold hidden"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function checkAnswer(isCorrect, btnElement, explanationMsg = '') {
+            const container = btnElement.closest('.quiz-card');
+            const feedback = container.querySelector('.feedback');
+            const buttons = container.querySelectorAll('button');
+
+            // Disable all buttons in this card after answering
+            buttons.forEach(b => {
+                b.disabled = true;
+                b.classList.remove('hover:text-primary', 'hover:bg-accent', 'cursor-pointer');
+                b.classList.add('opacity-50', 'cursor-not-allowed');
+            });
+
+            // Highlight the clicked button
+            if (isCorrect) {
+                btnElement.classList.replace('bg-dark', 'bg-green-900/40');
+                btnElement.classList.replace('border-accent', 'border-green-500');
+                btnElement.classList.replace('text-secondary', 'text-green-400');
+                btnElement.classList.remove('opacity-50');
+
+                feedback.innerHTML = `<span class="text-green-400">Correct!</span> <span class="text-secondary font-normal block mt-1">${explanationMsg}</span>`;
+            } else {
+                btnElement.classList.replace('bg-dark', 'bg-red-900/40');
+                btnElement.classList.replace('border-accent', 'border-red-500');
+                btnElement.classList.replace('text-secondary', 'text-red-400');
+                btnElement.classList.remove('opacity-50');
+
+                feedback.innerHTML = `<span class="text-red-400">Incorrect.</span>`;
+            }
+
+            feedback.classList.remove('hidden');
+        }
+    </script>
+</body>
+
+</html>

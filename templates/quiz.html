@@ -1,0 +1,24 @@
+<div class="bg-dark/50 border border-accent rounded-xl p-4 shrink-0">
+    <h2
+        class="font-bold text-primary flex items-center gap-2 mb-3 pb-2 border-b border-accent uppercase text-sm tracking-wider">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4">
+            </path>
+        </svg>
+        Pop Quiz
+    </h2>
+    <div id="quizContainer">
+        <p id="quizQuestion" class="text-sm font-semibold text-primary mb-3">Does a Neural Network use partial
+            derivatives (Gradient Descent) to update its weights?</p>
+        <div id="quizOptions" class="space-y-2">
+            <button
+                class="w-full text-left bg-card hover:bg-accent border border-accent p-2 rounded text-sm transition text-secondary hover:text-primary"
+                onclick="checkAnswer(true, this)">Yes, that's how it learns.</button>
+            <button
+                class="w-full text-left bg-card hover:bg-accent border border-accent p-2 rounded text-sm transition text-secondary hover:text-primary"
+                onclick="checkAnswer(false, this)">No, it uses K-distances.</button>
+        </div>
+        <div id="quizFeedback" class="mt-3 text-xs font-bold hidden"></div>
+    </div>
+</div>
