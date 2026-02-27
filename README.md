@@ -38,7 +38,7 @@ set FLASK_ENV=development
 python app.py
 ```
 
-Then open http://127.0.0.1:5000 in your browser (login with admin/password).
+Then open https://mlsilulatorsandbox.vercel.app/ in your browser (login with admin/password).
 
 ### Production mode (safe for deployment):
 
